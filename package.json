@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/2fd/http-protobuf#readme",
   "devDependencies": {
+    "@types/body-parser": "^1.16.5",
     "@types/get-port": "^3.2.0",
     "@types/jest": "^21.1.5",
     "@types/koa": "^2.0.39",
@@ -43,7 +44,6 @@
     "typescript": "^2.5.2"
   },
   "dependencies": {
-    "@types/body-parser": "^1.16.5",
     "body-parser": "^1.18.1",
     "connect": "^3.6.3",
     "koa-bodyparser": "^4.2.0",
