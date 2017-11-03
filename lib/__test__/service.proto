@@ -1,0 +1,95 @@
+syntax = "proto3";
+import "google/api/annotations.proto";
+
+/**
+ * CRUD example to manipulate users
+ */
+service UserService {
+
+    /**
+     * Return user by id
+     */
+    rpc GetUser (UserIdentifier) returns (User) {
+        option google.api.http.get = "/v1/user/:id";
+    };
+    
+    /** Return a list of user */
+    rpc FindUser (Filter) returns (ListOfUser) {
+        option google.api.http.get = "/v1/user";
+    };
+
+    /** Create a new user */
+    rpc CreateUser (NewUser) returns (User) {
+        option google.api.http.post = "/v1/user";
+        option google.api.http.body = "*";
+    };
+
+    /** Update user information */
+    rpc UpdateUser (UpdateUser) returns (User) {
+        option google.api.http.put = "/v1/user/:id";
+        option google.api.http.body = "*";
+    };
+
+    /** Delete a user */
+    rpc DeleteUser (UserIdentifier) returns (Confirmation) {
+        option google.api.http.delete = "/v1/user/:id";
+    };
+}
+
+/** Conifrmation response */
+message Confirmation {
+
+    enum Status {
+        Ok = 0;
+        Error = 1; 
+    }
+
+    Status status = 1;
+    string message = 2;
+}
+
+message UserIdentifier {
+    uint64 id = 1;
+}
+
+message User {
+    uint64 id = 1;
+    string name = 2;
+    string email = 3;
+}
+
+message NewUser {
+    string name = 2;
+    string email = 3;
+}
+
+message UpdateUser {
+    uint64 id = 1;
+    string name = 2;
+    string email = 3;
+}
+
+message ListOfUser {
+    repeated User users = 1;
+}
+
+// Filter
+message Filter {
+    
+    enum Operation {
+        Equal = 0 ;
+        Not = 1;
+        GreaterThan = 2;
+        LowerThan = 3;
+    }
+
+    message Condition {
+        string field = 1;
+        Operation operation = 2;
+        string value = 3;
+
+    }
+
+    repeated Condition conditions = 1;
+}
+

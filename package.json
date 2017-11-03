@@ -1,0 +1,56 @@
+{
+  "name": "http-protobuf",
+  "version": "0.0.0",
+  "description": "Expose your protocol buffer service as HTTP endpoint or RESTful API",
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc -p .",
+    "coverage": "rm -rf ./coverage && tsc -p . && jest --coverage",
+    "test": "tsc -p . && jest"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/2fd/http-protobuf.git"
+  },
+  "keywords": [
+    "grpc",
+    "swagger",
+    "rest",
+    "json",
+    "protobuf"
+  ],
+  "author": "Fede Ramirez <i@2fd.me>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/2fd/http-protobuf/issues"
+  },
+  "homepage": "https://github.com/2fd/http-protobuf#readme",
+  "devDependencies": {
+    "@types/get-port": "^3.2.0",
+    "@types/jest": "^21.1.5",
+    "@types/koa-bodyparser": "^3.0.25",
+    "@types/koa-router": "^7.0.23",
+    "@types/node": "^8.0.28",
+    "@types/supertest": "^2.0.3",
+    "get-port": "^3.2.0",
+    "jest": "^21.1.0",
+    "koa": "^2.3.0",
+    "open-api.d.ts": "^3.0.0",
+    "portfinder": "^1.0.13",
+    "supertest": "^3.0.0",
+    "tslint": "^5.7.0",
+    "typescript": "^2.5.2"
+  },
+  "dependencies": {
+    "@types/body-parser": "^1.16.5",
+    "body-parser": "^1.18.1",
+    "connect": "^3.6.3",
+    "koa-bodyparser": "^4.2.0",
+    "koa-router": "^7.2.1",
+    "marked": "^0.3.6",
+    "path-to-regexp": "^2.1.0",
+    "protobufjs": "^6.8.0",
+    "raw-body": "^2.3.2",
+    "router": "^1.3.1"
+  }
+}
