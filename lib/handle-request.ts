@@ -8,6 +8,7 @@ export interface IHandleResponse<T> {
     statusCode: Http;
     statusMessage: string;
     response: T | null;
+    error: Error | null;
 }
 
 export class HandleRequest<Req extends object, Res extends object> {
@@ -24,6 +25,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             request = this.requestType.decode(body);
         } catch (decodeError) {
             return {
+                error: decodeError,
                 response: null,
                 status: Grpc.InvalidArgument,
                 statusCode: Http.BadRequest,
@@ -33,6 +35,7 @@ export class HandleRequest<Req extends object, Res extends object> {
 
         const res = await this.handle(request);
         return {
+            error: null,
             response: res.response ? new Buffer(this.responseType.encode(res.response).finish()) as any : null,
             status: res.status,
             statusCode: res.statusCode,
@@ -44,6 +47,7 @@ export class HandleRequest<Req extends object, Res extends object> {
         const request = this.requestType.create(body);
         const res = await this.handle(request);
         return {
+            error: null,
             response: res.response ? this.responseType.toObject(res.response, options) : null,
             status: res.status,
             statusCode: res.statusCode,
@@ -57,6 +61,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             const requestError = this.requestType.verify(request);
             if (requestError) {
                 return {
+                    error: new Error(requestError),
                     response: null,
                     status: Grpc.InvalidArgument,
                     statusCode: Http.BadRequest,
@@ -69,6 +74,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             const responseError = this.responseType.verify(response);
             if (responseError) {
                 return {
+                    error: new Error(responseError),
                     response: null,
                     status: Grpc.Internal,
                     statusCode: Http.InternalServerError,
@@ -77,6 +83,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             }
             // Return response
             return {
+                error: null,
                 response,
                 status: Grpc.OK,
                 statusCode: Http.OK,
@@ -85,6 +92,7 @@ export class HandleRequest<Req extends object, Res extends object> {
         } catch (error) {
             // Catch unexpected errors
             return {
+                error,
                 response: null,
                 status: error.status || Grpc.Unknown,
                 statusCode: error.statusCode || Http.InternalServerError,

@@ -143,6 +143,8 @@ export class OpenApiRouter extends Router {
                             error: Grpc[handleResponse.status],
                             message: handleResponse.statusMessage,
                         };
+
+                        throw (handleResponse.error || new Error(handleResponse.statusMessage));
                     }
                 });
 

@@ -86,6 +86,8 @@ export class UnaryBufferRouter extends Router {
                     ctx.response.set("Status-Message", handleResponse.statusMessage);
                     if (handleResponse.status === 0) {
                         ctx.response.body = handleResponse.response;
+                    } else {
+                        throw (handleResponse.error || new Error(handleResponse.statusMessage));
                     }
                 });
 
