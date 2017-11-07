@@ -2,10 +2,10 @@ import * as Router from "koa-router";
 import {Method, Reader, Root, Type} from "protobufjs";
 import * as raw from "raw-body";
 
+import {Implementations} from "../../interface";
 import {Grpc, Http} from "../codes";
 import {UnimplementedError} from "../errors/grpc/UnimplementedError";
 import {HandleRequest} from "../handle-request";
-import {Implementations} from "../interface";
 
 export interface IRouterOptions extends Router.IRouterOptions {
     root: Root;

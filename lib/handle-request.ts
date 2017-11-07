@@ -1,7 +1,7 @@
 import { Message, Reader, Type, util } from "protobufjs";
 import { Grpc, Http } from "./codes";
 
-import { ServiceImplementation } from "./interface";
+import { ServiceImplementation } from "../interface";
 
 export interface IHandleResponse<T> {
     status: Grpc;

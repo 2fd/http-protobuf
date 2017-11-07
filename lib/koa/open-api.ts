@@ -4,10 +4,10 @@ import {ISchemaObject} from "open-api.d.ts";
 import * as pathToRegexp from "path-to-regexp";
 import {Method, Reader, Root, Type} from "protobufjs";
 
+import {Implementations} from "../../interface";
 import {Grpc, Http} from "../codes";
 import {UnimplementedError} from "../errors/grpc/UnimplementedError";
 import {HandleRequest} from "../handle-request";
-import {Implementations} from "../interface";
 
 export interface IRouterOptions extends Router.IRouterOptions {
     root: Root;

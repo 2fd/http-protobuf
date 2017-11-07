@@ -58,3 +58,4 @@ typings/
 .env
 .vscode
 lib/**/*.js
+lib/**/*.d.ts
