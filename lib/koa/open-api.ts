@@ -138,6 +138,11 @@ export class OpenApiRouter extends Router {
                     ctx.response.set("Status-Message", handleResponse.statusMessage);
                     if (handleResponse.status === 0) {
                         ctx.response.body = handleResponse.response;
+                    } else {
+                        ctx.response.body = {
+                            error: Grpc[handleResponse.status],
+                            message: handleResponse.statusMessage,
+                        };
                     }
                 });
 

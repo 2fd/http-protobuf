@@ -113,4 +113,28 @@ describe(OpenApiRouter.name, () => {
             randomString: String(random),
         }));
     });
+
+
+    test(`ERROR:POST "/v1/action"`, async () => {
+        const app = new Koa();
+        const random = Math.ceil(Math.random() * 127);
+        const port = await getPort();
+        const server = app.use(router.routes()).listen(port);
+
+        const response = await request(server)
+            .post(`/v1/action`)
+            .set("Content-Type", "application/json")
+            .send({ random: {} });
+
+        server.close();
+
+        expect(response.get("Status-Message")).toEqual("random: integer expected");
+        expect(response.get("Status")).toEqual("3");
+        expect(response.type).toEqual("application/json");
+        expect(response.status).toEqual(400);
+        expect(response.text).toEqual(JSON.stringify({
+            error: "InvalidArgument",
+            message: "random: integer expected",
+        }));
+    });
 });
