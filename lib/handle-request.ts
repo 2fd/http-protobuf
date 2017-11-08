@@ -44,7 +44,7 @@ export class HandleRequest<Req extends object, Res extends object> {
     }
 
     public async handleObject(body: object, options: object = {}): Promise<IHandleResponse<object>> {
-        const request = this.requestType.create(body);
+        const request = this.requestType.fromObject(body);
         const res = await this.handle(request);
         return {
             error: res.error,
@@ -70,7 +70,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             }
             // Create and validate response
             const responseObject = await this.implementation(request.toJSON() as any);
-            const response = this.responseType.create(responseObject);
+            const response = this.responseType.fromObject(responseObject);
             const responseError = this.responseType.verify(response);
             if (responseError) {
                 return {
