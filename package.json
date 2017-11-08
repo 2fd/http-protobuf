@@ -26,6 +26,7 @@
   },
   "homepage": "https://github.com/2fd/http-protobuf#readme",
   "devDependencies": {
+    "@types/get-port": "^3.2.0",
     "@types/jest": "^21.1.5",
     "@types/node": "^8.0.28",
     "@types/supertest": "^2.0.3",
@@ -33,7 +34,6 @@
     "jest": "^21.1.0",
     "koa": "^2.3.0",
     "open-api.d.ts": "^3.0.0",
-    "portfinder": "^1.0.13",
     "supertest": "^3.0.0",
     "tslint": "^5.7.0",
     "typescript": "^2.5.2"
