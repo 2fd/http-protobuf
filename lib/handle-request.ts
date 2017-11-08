@@ -35,7 +35,7 @@ export class HandleRequest<Req extends object, Res extends object> {
 
         const res = await this.handle(request);
         return {
-            error: null,
+            error: res.error,
             response: res.response ? new Buffer(this.responseType.encode(res.response).finish()) as any : null,
             status: res.status,
             statusCode: res.statusCode,
@@ -47,7 +47,7 @@ export class HandleRequest<Req extends object, Res extends object> {
         const request = this.requestType.create(body);
         const res = await this.handle(request);
         return {
-            error: null,
+            error: res.error,
             response: res.response ? this.responseType.toObject(res.response, options) : null,
             status: res.status,
             statusCode: res.statusCode,
