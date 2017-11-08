@@ -56,6 +56,10 @@ typings/
 
 # dotenv environment variables file
 .env
+
+# Project files
 .vscode
 lib/**/*.ts
+lib/**/*.test.js
 !lib/**/*.d.ts
+lib/**/*.test.d.ts
