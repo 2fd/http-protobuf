@@ -6,32 +6,31 @@ import * as request from "supertest";
 import { OpenApiRouter } from "./open-api";
 
 const proto = `
-            syntax = "proto3";
-            service TestService {
-                rpc Action (ActionRequest) returns (ActionResponse) {
-                    option google.api.http.get = "/v1/action/:random";
-                };
+    syntax = "proto3";
+    service TestService {
+        rpc Action (ActionRequest) returns (ActionResponse) {
+            option google.api.http.get = "/v1/action/:random";
+        };
 
-                rpc CreateAction (CreateActionRequest) returns (ActionResponse) {
-                    option google.api.http.post = "/v1/action";
-                    option google.api.http.body = "*";
-                };
-            }
+        rpc CreateAction (CreateActionRequest) returns (ActionResponse) {
+            option google.api.http.post = "/v1/action";
+            option google.api.http.body = "*";
+        };
+    }
 
-            message ActionRequest {
-                string random = 1;
-            }
+    message ActionRequest {
+        string random = 1;
+    }
 
-            message CreateActionRequest {
-                uint32 random = 1;
-            }
+    message CreateActionRequest {
+        uint32 random = 1;
+    }
 
-            message ActionResponse {
-                uint32 randomNumber = 1;
-                string randomString = 2;
-            }
-        `;
-
+    message ActionResponse {
+        uint32 randomNumber = 1;
+        string randomString = 2;
+    }
+`;
 
 interface IActionParams { random: string; }
 interface IActionResponse { randomNumber: number; randomString: string; }
@@ -47,7 +46,14 @@ const implementation = {
 };
 
 const router = new OpenApiRouter({
+    definitionEndpoint: "openapi.json",
     implementation,
+    openapi: {
+        info: {
+            title: "Example API",
+            version: "X.X.X.",
+        },
+    },
     root,
     services: ["TestService"],
 });
@@ -114,6 +120,20 @@ describe(OpenApiRouter.name, () => {
         }));
     });
 
+    test(`GET "openapi.json"`, async () => {
+        const app = new Koa();
+        const port = await getPort();
+        const server = app.use(router.routes()).listen(port);
+
+        const response = await request(server)
+            .get("/openapi.json")
+            .set("Content-Type", "application/json")
+            .send();
+
+        server.close();
+
+        expect(response.text).toEqual(JSON.stringify({}));
+    });
 
     test(`ERROR:POST "/v1/action"`, async () => {
         const app = new Koa();

@@ -1,6 +1,12 @@
 import * as body from "koa-bodyparser";
 import * as Router from "koa-router";
-import {ISchemaObject} from "open-api.d.ts";
+import {
+    IExternalDocumentationObject,
+    IInfoObject, IOpenApiObject,
+    ISecurityRequirementObject,
+    IServerObject,
+    ITagObject,
+} from "open-api.d.ts";
 import * as pathToRegexp from "path-to-regexp";
 import {Method, Reader, Root, Type} from "protobufjs";
 
@@ -13,7 +19,16 @@ export interface IRouterOptions extends Router.IRouterOptions {
     root: Root;
     services: string[];
     implementation: Implementations;
-    jsonOptions?: object;
+    definitionEndpoint: string;
+    customType?: {
+        [protoType: string]: any,
+    };
+    openapi: {
+        info: IInfoObject,
+        servers?: IServerObject[],
+        security?: ISecurityRequirementObject[],
+        tags?: ITagObject[],
+    };
 }
 
 export interface IHandleRequestInfo {
@@ -31,14 +46,6 @@ export interface IResolvedHttpOptions {
 export type SupportedHttpMethod = "get" | "post" | "put" | "delete";
 
 export class OpenApiRouter extends Router {
-
-    public static ContentType = new Set([
-        "application/json",
-        "application/json-patch+json",
-        "application/vnd.api+json",
-        "application/csp-report",
-        "application/x-www-form-urlencoded",
-    ]);
 
     public static resolveOptions(options?: { [key: string]: any }): IResolvedHttpOptions | null {
 
@@ -93,6 +100,7 @@ export class OpenApiRouter extends Router {
     }
 
     private handleRequests: IHandleRequestInfo[] = [];
+    private openapi: IOpenApiObject;
 
     constructor(options: IRouterOptions) {
         super(options);
@@ -100,6 +108,15 @@ export class OpenApiRouter extends Router {
         if (!options.services) {
             throw new TypeError(`service option is required`);
         }
+
+        this.openapi = Object.assign(
+            {
+                openapi: "3.0.0",
+                paths: {},
+                tags: [],
+            },
+            options.openapi,
+        );
 
         this.use(body());
         options.services.forEach((serviceName) => {
@@ -125,11 +142,12 @@ export class OpenApiRouter extends Router {
                     return null;
                 }
 
-                this[http.method](http.path, async (ctx, next) => {
-                    if (!OpenApiRouter.ContentType.has(ctx.get("content-type"))) {
-                        return next();
-                    }
+                this.openapi.paths[http.path] = this.openapi.paths[http.path] || {};
+                this.openapi.paths[http.path][http.method] = {
+                    description: method.comment,
+                };
 
+                this[http.method](http.path, async (ctx, next) => {
                     const requestObject = OpenApiRouter.resolveRequestObject(ctx, http.body);
                     const handleResponse = await handleRequest.handleObject(requestObject);
 
@@ -156,9 +174,18 @@ export class OpenApiRouter extends Router {
             })
             .filter((r) => r !== null) as IHandleRequestInfo[];
         });
+
+        this.get("/" + options.definitionEndpoint, (ctx) => {
+            ctx.status = 200;
+            ctx.body = this.openApiDefinition();
+        });
     }
 
     public handles() {
         return this.handleRequests.slice();
+    }
+
+    public openApiDefinition() {
+        return this.openapi;
     }
 }

@@ -21,15 +21,6 @@ export interface IHandleRequestInfo {
 
 export class UnaryBufferRouter extends Router {
 
-    public static ContentType = new Set([
-        "application/octet-stream",
-        "application/protobuf",
-        "application/x-protobuf",
-        "application/vnd.google.protobuf",
-        // "application/grpc+proto",
-        "application/grpc-web+proto",
-    ]);
-
     public static async BodyParser(ctx: Router.IRouterContext): Promise<Buffer> {
         switch (ctx.request.type) {
             case "application/octet-stream":
@@ -72,11 +63,7 @@ export class UnaryBufferRouter extends Router {
                 const handleRequest = new HandleRequest<any, any>(requestType, responseType, implementation);
 
                 // Register path
-                this.post(path, async (ctx, next) => {
-                    if (!UnaryBufferRouter.ContentType.has(ctx.get("content-type"))) {
-                        return next();
-                    }
-
+                this.post(path, async (ctx) => {
                     ctx.response.type = "application/grpc-web+proto";
                     const body = await UnaryBufferRouter.BodyParser(ctx);
                     const handleResponse = await handleRequest.handleBuffer(body);

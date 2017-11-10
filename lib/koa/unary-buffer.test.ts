@@ -6,20 +6,20 @@ import * as request from "supertest";
 import { UnaryBufferRouter } from "./unary-buffer";
 
 const proto = `
-            syntax = "proto3";
-            service TestService {
-                rpc Action (ActionRequest) returns (ActionResponse);
-            }
+    syntax = "proto3";
+    service TestService {
+        rpc Action (ActionRequest) returns (ActionResponse);
+    }
 
-            message ActionRequest {
-                uint32 random = 1;
-            }
+    message ActionRequest {
+        uint32 random = 1;
+    }
 
-            message ActionResponse {
-                uint32 randomNumber = 1;
-                string randomString = 2;
-            }
-        `;
+    message ActionResponse {
+        uint32 randomNumber = 1;
+        string randomString = 2;
+    }
+`;
 
 interface IActionParams { random: number; }
 interface IActionResponse { randomNumber: number; randomString: string; }
