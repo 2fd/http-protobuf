@@ -7,7 +7,6 @@ import {
     IServerObject,
     ITagObject,
 } from "open-api.d.ts";
-import * as pathToRegexp from "path-to-regexp";
 import {Method, Reader, Root, Type} from "protobufjs";
 
 import {Implementations} from "../../interface";
