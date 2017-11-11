@@ -19,6 +19,7 @@ export interface IRouterOptions extends Router.IRouterOptions {
     services: string[];
     implementation: Implementations;
     definitionEndpoint: string;
+    toObjectOptions?: object;
     customType?: {
         [protoType: string]: any,
     };
@@ -148,7 +149,10 @@ export class OpenApiRouter extends Router {
 
                 this[http.method](http.path, async (ctx, next) => {
                     const requestObject = OpenApiRouter.resolveRequestObject(ctx, http.body);
-                    const handleResponse = await handleRequest.handleObject(requestObject);
+                    const handleResponse = await handleRequest.handleObject(
+                        requestObject,
+                        options.toObjectOptions || {},
+                    );
 
                     ctx.status = handleResponse.statusCode;
                     ctx.response.set("Status", String(handleResponse.status));
