@@ -18,7 +18,7 @@ export interface IRouterOptions extends Router.IRouterOptions {
     root: Root;
     services: string[];
     implementation: Implementations;
-    definitionEndpoint: string;
+    definitionEndpoint?: string;
     toObjectOptions?: object;
     customType?: {
         [protoType: string]: any,
@@ -178,10 +178,15 @@ export class OpenApiRouter extends Router {
             .filter((r) => r !== null) as IHandleRequestInfo[];
         });
 
-        this.get("/" + options.definitionEndpoint, (ctx) => {
-            ctx.status = 200;
-            ctx.body = this.openApiDefinition();
-        });
+        if (options.definitionEndpoint) {
+            const definitionEndpoint = typeof options.definitionEndpoint === "string" ?
+                options.definitionEndpoint : "openapi.json";
+
+            this.get("/" + options.definitionEndpoint, (ctx) => {
+                ctx.status = 200;
+                ctx.body = this.openApiDefinition();
+            });
+        }
     }
 
     public handles() {
