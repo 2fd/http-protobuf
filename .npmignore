@@ -61,4 +61,5 @@ typings/
 .vscode
 lib/**/*.ts
 lib/**/*.test.js
+lib/utils
 !lib/**/*.d.ts

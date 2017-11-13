@@ -7,7 +7,8 @@ import {
     IServerObject,
     ITagObject,
 } from "open-api.d.ts";
-import {Method, Reader, Root, Type} from "protobufjs";
+import { Method, Reader, Root, Type } from "protobufjs";
+import { parse } from "qs";
 
 import {Implementations} from "../../interface";
 import {Grpc, Http} from "../codes";
@@ -83,7 +84,7 @@ export class OpenApiRouter extends Router {
     }
 
     public static resolveRequestObject(ctx: Router.IRouterContext, bodyPosition: string): object {
-        let requestObject = Object.assign({}, ctx.params || null, ctx.query || null);
+        let requestObject = Object.assign({}, ctx.params || null, ctx.querystring ? parse(ctx.querystring) : null);
         switch (bodyPosition) {
             case "*":
                 requestObject = Object.assign(requestObject, ctx.request.body);
