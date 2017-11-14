@@ -46,6 +46,15 @@ export class HandleRequest<Req extends object, Res extends object> {
     public async handleObject(body: object, options: object = {}): Promise<IHandleResponse<object>> {
         const request = this.requestType.fromObject(body);
         const res = await this.handle(request);
+        const opt = Object.assign(
+                {
+                enums: String,
+                longs: String,
+                oneofs: true,
+            },
+            options,
+        );
+
         return {
             error: res.error,
             response: res.response ? this.responseType.toObject(res.response, options) : null,
