@@ -1,5 +1,5 @@
 import * as body from "koa-bodyparser";
-import * as Router from "koa-router";
+import * as KoaRouter from "koa-router";
 import {
     IExternalDocumentationObject,
     IInfoObject, IOpenApiObject,
@@ -7,16 +7,16 @@ import {
     IServerObject,
     ITagObject,
 } from "open-api.d.ts";
-import { Method, Reader, Root, Type } from "protobufjs";
+import { Method, Reader, Root, Service, Type } from "protobufjs";
 import { parse } from "qs";
 
 import {Implementations} from "../../interface";
 import {Grpc, Http} from "../codes";
 import {UnimplementedError} from "../errors/grpc/UnimplementedError";
-import {HandleRequest} from "../handle-request";
+import { HandleRequest } from "../handle-request";
+import * as router from "./router";
 
-export interface IRouterOptions extends Router.IRouterOptions {
-    root: Root;
+export interface IRouterOptions extends router.IRouterOptions {
     services: string[];
     implementation: Implementations;
     definitionEndpoint?: string;
@@ -46,7 +46,7 @@ export interface IResolvedHttpOptions {
 
 export type SupportedHttpMethod = "get" | "post" | "put" | "delete";
 
-export class OpenApiRouter extends Router {
+export class OpenApiRouter extends router.Router {
 
     public static resolveOptions(options?: { [key: string]: any }): IResolvedHttpOptions | null {
 
@@ -83,7 +83,7 @@ export class OpenApiRouter extends Router {
         return null;
     }
 
-    public static resolveRequestObject(ctx: Router.IRouterContext, bodyPosition: string): object {
+    public static resolveRequestObject(ctx: KoaRouter.IRouterContext, bodyPosition: string): object {
         let requestObject = Object.assign({}, ctx.params || null, ctx.querystring ? parse(ctx.querystring) : null);
         switch (bodyPosition) {
             case "*":
@@ -121,20 +121,15 @@ export class OpenApiRouter extends Router {
 
         this.use(body());
         options.services.forEach((serviceName) => {
-            const service = options.root.lookupService(serviceName);
-
-            if (!service) {
-                throw new TypeError(`Service "${service}" not found on root`);
-            }
-
+            const service = this.lookupService(serviceName);
             this.handleRequests = service.methodsArray.map((method: Method) => {
                 if (typeof options.implementation[method.name] !== "function") {
                     throw new Error(`Method ${serviceName}.${method.name} is not implemented`);
                 }
 
                 const implementation = options.implementation[method.name];
-                const requestType = options.root.lookupType(method.requestType);
-                const responseType = options.root.lookupType(method.responseType);
+                const requestType = this.lookupType(method.requestType);
+                const responseType = this.lookupType(method.responseType);
                 const handleRequest = new HandleRequest<any, any>(requestType, responseType, implementation);
 
                 const http = OpenApiRouter.resolveOptions(method.options);

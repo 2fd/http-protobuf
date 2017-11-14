@@ -1,4 +1,4 @@
-import * as Router from "koa-router";
+import * as KoaRouter from "koa-router";
 import {Method, Reader, Root, Type} from "protobufjs";
 import * as raw from "raw-body";
 
@@ -6,9 +6,9 @@ import {Implementations} from "../../interface";
 import {Grpc, Http} from "../codes";
 import {UnimplementedError} from "../errors/grpc/UnimplementedError";
 import {HandleRequest} from "../handle-request";
+import * as router from "./router";
 
-export interface IRouterOptions extends Router.IRouterOptions {
-    root: Root;
+export interface IRouterOptions extends router.IRouterOptions {
     services: string[];
     implementation: Implementations;
 }
@@ -19,9 +19,9 @@ export interface IHandleRequestInfo {
     method: string;
 }
 
-export class UnaryBufferRouter extends Router {
+export class UnaryBufferRouter extends router.Router {
 
-    public static async BodyParser(ctx: Router.IRouterContext): Promise<Buffer> {
+    public static async BodyParser(ctx: KoaRouter.IRouterContext): Promise<Buffer> {
         switch (ctx.request.type) {
             case "application/octet-stream":
             case "application/protobuf":
@@ -45,12 +45,7 @@ export class UnaryBufferRouter extends Router {
         }
 
         options.services.forEach((serviceName) => {
-            const service = options.root.lookupService(serviceName);
-
-            if (!service) {
-                throw new TypeError(`Service "${service}" not found on root`);
-            }
-
+            const service = this.lookupService(serviceName);
             this.handleRequests = service.methodsArray.map((method: Method) => {
                 if (typeof options.implementation[method.name] !== "function") {
                     throw new Error(`Method ${serviceName}.${method.name} is not implemented`);
@@ -58,8 +53,8 @@ export class UnaryBufferRouter extends Router {
 
                 const path = `/${serviceName}/${method.name}`;
                 const implementation = options.implementation[method.name];
-                const requestType = options.root.lookupType(method.requestType);
-                const responseType = options.root.lookupType(method.responseType);
+                const requestType = this.lookupType(method.requestType);
+                const responseType = this.lookupType(method.responseType);
                 const handleRequest = new HandleRequest<any, any>(requestType, responseType, implementation);
 
                 // Register path
