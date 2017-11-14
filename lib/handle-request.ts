@@ -57,7 +57,7 @@ export class HandleRequest<Req extends object, Res extends object> {
 
         return {
             error: res.error,
-            response: res.response ? this.responseType.toObject(res.response, options) : null,
+            response: res.response ? this.responseType.toObject(res.response, opt) : null,
             status: res.status,
             statusCode: res.statusCode,
             statusMessage: res.statusMessage,
