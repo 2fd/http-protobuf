@@ -51,7 +51,7 @@ export class UnaryBufferRouter extends router.Router {
                     throw new Error(`Method ${serviceName}.${method.name} is not implemented`);
                 }
 
-                const path = `/${serviceName}/${method.name}`;
+                const path = `/${service.fullName}/${method.name}`;
                 const implementation = options.implementation[method.name];
                 const requestType = this.lookupType(method.requestType);
                 const responseType = this.lookupType(method.responseType);
