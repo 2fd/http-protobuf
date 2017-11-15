@@ -59,6 +59,7 @@ typings/
 
 # Project files
 .vscode
+bin
 lib/**/*.ts
 lib/**/*.test.js
 lib/utils

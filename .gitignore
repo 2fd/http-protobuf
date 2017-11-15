@@ -57,6 +57,7 @@ typings/
 # dotenv environment variables file
 .env
 .vscode
+bin
 lib/utils
 lib/**/*.js
 lib/**/*.d.ts
