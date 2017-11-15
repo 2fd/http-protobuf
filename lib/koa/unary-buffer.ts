@@ -80,6 +80,18 @@ export class UnaryBufferRouter extends router.Router {
                 };
             });
         });
+
+        this.all("/", (ctx) => {
+            if (ctx.method.toLowerCase() !== "post") {
+                ctx.status = Http.MethodNotAllowed;
+                ctx.response.set("Status", String(Grpc.NotFound));
+                ctx.response.set("Status-Message", `Invalid HTTP request: Method ${ctx.method} is not allowed`);
+            } else {
+                ctx.status = Http.NotFound;
+                ctx.response.set("Status", String(Grpc.NotFound));
+                ctx.response.set("Status-Message", `Invalid HTTP request: Path ${ctx.path} is not a service`);
+            }
+        });
     }
 
     public handles() {
