@@ -61,3 +61,5 @@ bin
 lib/utils
 lib/**/*.js
 lib/**/*.d.ts
+index.js
+index.d.ts
