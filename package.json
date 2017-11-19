@@ -5,6 +5,8 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc -p .",
+    "build:definitions": "tsc -p .",
+    "prepublish": "npm run build && npm run build:definitions",
     "coverage": "rm -rf ./coverage && tsc -p . && jest --coverage",
     "test": "jest"
   },
