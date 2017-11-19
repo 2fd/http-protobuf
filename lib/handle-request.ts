@@ -1,5 +1,7 @@
 import { Message, Reader, Type, util } from "protobufjs";
 import { Grpc, Http } from "./codes";
+import { InternalError } from "./errors/grpc/InternalError";
+import { InvalidArgumentError } from "./errors/grpc/InvalidArgumentError";
 
 import { ServiceImplementation } from "../interface";
 
@@ -70,7 +72,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             const requestError = this.requestType.verify(request);
             if (requestError) {
                 return {
-                    error: new Error(requestError),
+                    error: new InvalidArgumentError(requestError),
                     response: null,
                     status: Grpc.InvalidArgument,
                     statusCode: Http.BadRequest,
@@ -83,7 +85,7 @@ export class HandleRequest<Req extends object, Res extends object> {
             const responseError = this.responseType.verify(response);
             if (responseError) {
                 return {
-                    error: new Error(responseError),
+                    error: new InternalError(responseError),
                     response: null,
                     status: Grpc.Internal,
                     statusCode: Http.InternalServerError,
