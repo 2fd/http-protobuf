@@ -16,6 +16,7 @@ export interface IRouterOptions extends router.IRouterOptions {
 export interface IHandleRequestInfo {
     handleRequest: HandleRequest<any, any>;
     path: string;
+    prefix: string;
     method: string;
 }
 
@@ -77,6 +78,7 @@ export class UnaryBufferRouter extends router.Router {
                     handleRequest,
                     method: "post",
                     path,
+                    prefix: options.prefix || "",
                 };
             });
         });

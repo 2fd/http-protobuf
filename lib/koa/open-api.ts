@@ -34,6 +34,7 @@ export interface IRouterOptions extends router.IRouterOptions {
 
 export interface IHandleRequestInfo {
     handleRequest: HandleRequest<any, any>;
+    prefix: string;
     path: string;
     method: string;
 }
@@ -169,6 +170,7 @@ export class OpenApiRouter extends router.Router {
                     handleRequest,
                     method: http.method,
                     path: http.path,
+                    prefix: options.prefix || "",
                 };
             })
             .filter((r) => r !== null) as IHandleRequestInfo[];
