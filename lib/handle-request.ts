@@ -69,29 +69,34 @@ export class HandleRequest<Req extends object, Res extends object> {
     public async handle(request: Message<Req>): Promise<IHandleResponse<Message<Res>>> {
         try {
             // Create and validate request
-            const requestError = this.requestType.verify(request);
-            if (requestError) {
+            try {
+                const requestError = this.requestType.verify(request);
+            } catch (error) {
                 return {
-                    error: new InvalidArgumentError(requestError),
+                    error: new InvalidArgumentError(error.message),
                     response: null,
                     status: Grpc.InvalidArgument,
                     statusCode: Http.BadRequest,
-                    statusMessage: requestError,
+                    statusMessage: error.message,
                 };
+
             }
+
             // Create and validate response
             const responseObject = await this.implementation(request.toJSON() as any);
             const response = this.responseType.fromObject(responseObject);
-            const responseError = this.responseType.verify(response);
-            if (responseError) {
+            try {
+                const responseError = this.responseType.verify(response);
+            } catch (error) {
                 return {
-                    error: new InternalError(responseError),
+                    error: new InternalError(error.message),
                     response: null,
                     status: Grpc.Internal,
                     statusCode: Http.InternalServerError,
-                    statusMessage: responseError,
+                    statusMessage: error.message,
                 };
             }
+
             // Return response
             return {
                 error: null,
