@@ -2142,9 +2142,9 @@ only@0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/only/-/only-0.0.2.tgz#2afde84d03e50b9a8edc444e30610a70295edfb4"
 
-open-api.d.ts@^3.0.0:
-  version "3.0.0"
-  resolved "https://registry.yarnpkg.com/open-api.d.ts/-/open-api.d.ts-3.0.0.tgz#0356081b41323d92c4e1332392c98f78d07a3f58"
+open-api.d.ts@^3.0.1:
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/open-api.d.ts/-/open-api.d.ts-3.0.1.tgz#e88384ab7cfbacc6ed28fad2e74e278841a0041a"
 
 optimist@^0.6.1:
   version "0.6.1"
