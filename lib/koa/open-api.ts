@@ -1,13 +1,15 @@
 import * as body from "koa-bodyparser";
 import * as KoaRouter from "koa-router";
 import {
+    IComponentsObject,
     IExternalDocumentationObject,
     IInfoObject, IOpenApiObject,
+    ISchemaObject,
     ISecurityRequirementObject,
     IServerObject,
     ITagObject,
-} from "open-api.d.ts";
-import { Method, Reader, Root, Service, Type } from "protobufjs";
+} from "open-api.d.ts/index";
+import { Enum, Field, Method, Reader, Root, Service, Type } from "protobufjs";
 import { parse } from "qs";
 
 import {Implementations} from "../../interface";
@@ -19,7 +21,7 @@ import * as router from "./router";
 export interface IRouterOptions extends router.IRouterOptions {
     services: string[];
     implementation: Implementations;
-    definitionEndpoint?: string;
+    definitionEndpoint?: string | boolean;
     toObjectOptions?: object;
     customType?: {
         [protoType: string]: any,
@@ -101,12 +103,14 @@ export class OpenApiRouter extends router.Router {
         return requestObject;
     }
 
+    public opt: IRouterOptions;
     private handleRequests: IHandleRequestInfo[] = [];
     private openapi: IOpenApiObject;
 
     constructor(options: IRouterOptions) {
         super(options);
 
+        this.opt = options;
         if (!options.services) {
             throw new TypeError(`service option is required`);
         }
@@ -121,9 +125,10 @@ export class OpenApiRouter extends router.Router {
         );
 
         this.use(body());
+        this.handleRequests = [];
         options.services.forEach((serviceName) => {
             const service = this.lookupService(serviceName);
-            this.handleRequests = service.methodsArray.map((method: Method) => {
+            service.methodsArray.reduce((handleRequests: IHandleRequestInfo[], method: Method) => {
                 if (typeof options.implementation[method.name] !== "function") {
                     throw new Error(`Method ${serviceName}.${method.name} is not implemented`);
                 }
@@ -132,48 +137,22 @@ export class OpenApiRouter extends router.Router {
                 const requestType = this.lookupType(method.requestType);
                 const responseType = this.lookupType(method.responseType);
                 const handleRequest = new HandleRequest<any, any>(requestType, responseType, implementation);
-
                 const http = OpenApiRouter.resolveOptions(method.options);
 
-                if (!http) {
-                    return null;
+                if (http) {
+                    this.setOpenApiDefinition(http, method, handleRequest);
+                    this.setHandleRequest(http, handleRequest);
+
+                    handleRequests.push({
+                        handleRequest,
+                        method: http.method,
+                        path: http.path,
+                        prefix: options.prefix ||  "",
+                    });
                 }
 
-                this.openapi.paths[http.path] = this.openapi.paths[http.path] || {};
-                this.openapi.paths[http.path][http.method] = {
-                    description: method.comment,
-                };
-
-                this[http.method](http.path, async (ctx, next) => {
-                    const requestObject = OpenApiRouter.resolveRequestObject(ctx, http.body);
-                    const handleResponse = await handleRequest.handleObject(
-                        requestObject,
-                        options.toObjectOptions || {},
-                    );
-
-                    ctx.status = handleResponse.statusCode;
-                    ctx.response.set("Status", String(handleResponse.status));
-                    ctx.response.set("Status-Message", handleResponse.statusMessage);
-                    if (handleResponse.status === 0) {
-                        ctx.response.body = handleResponse.response;
-                    } else {
-                        ctx.response.body = {
-                            error: Grpc[handleResponse.status],
-                            message: handleResponse.statusMessage,
-                        };
-
-                        throw (handleResponse.error || new Error(handleResponse.statusMessage));
-                    }
-                });
-
-                return {
-                    handleRequest,
-                    method: http.method,
-                    path: http.path,
-                    prefix: options.prefix || "",
-                };
-            })
-            .filter((r) => r !== null) as IHandleRequestInfo[];
+                return handleRequests;
+            }, this.handleRequests);
         });
 
         if (options.definitionEndpoint) {
@@ -185,6 +164,127 @@ export class OpenApiRouter extends router.Router {
                 ctx.body = this.openApiDefinition();
             });
         }
+    }
+
+    public setOpenApiDefinition(http: IResolvedHttpOptions, method: Method, handleRequest: HandleRequest<any, any>) {
+        this.openapi.paths[http.path] = this.openapi.paths[http.path] || {};
+        this.openapi.paths[http.path][http.method] = {
+            description: method.comment,
+        };
+
+        // this.setOpenApiTypeDefinition(handleRequest.requestType);
+        // this.setOpenApiTypeDefinition(handleRequest.responseType);
+    }
+
+    public setOpenApiTypeDefinition(protoType: Type) {
+        if (!this.openapi.components) {
+            this.openapi.components = {
+                schemas: {},
+            };
+        }
+
+        const components = this.openapi.components as IComponentsObject;
+        const schemas = components.schemas as ISchemaObject;
+
+        if (schemas[protoType.fullName]) {
+            return this;
+        }
+
+        const schema = { type: "object" } as any;
+        const innerTypes = [] as Type[];
+        const innerEnums = [] as Enum[];
+
+        schema.required = protoType.fieldsArray
+            .filter((field) => field.required)
+            .map((field) => field.name);
+
+        schema.properties = protoType.fieldsArray
+            .reduce((properties: any, field: Field) => {
+                let property: any = {};
+
+                if (field.resolvedType === null) {
+                    property.type = field.type;
+                } else {
+                    property.$ref = "#/components/schemas/" + field.resolvedType.fullName;
+                    if (field.resolvedType instanceof Enum) {
+                        innerEnums.push(field.resolvedType as Enum);
+                    } else {
+                        innerTypes.push(field.resolvedType as Type);
+                    }
+                }
+
+                if (field.repeated) {
+                    property = {
+                        items: property,
+                        type: "array",
+                    };
+                }
+
+                if (field.comment) {
+                    property.description = field.comment;
+                }
+
+                properties[field.name] = property;
+                return properties;
+            }, {});
+
+        schemas[protoType.fullName] = schema;
+        innerTypes.forEach((t) => this.setOpenApiTypeDefinition(t));
+        innerEnums.forEach((e) => this.setOpenApiEnumDefinition(e));
+        return this;
+    }
+
+    public setOpenApiEnumDefinition(protoEnum: Enum) {
+        if (!this.openapi.components) {
+            this.openapi.components = {
+                schemas: {},
+            };
+        }
+
+        const components = this.openapi.components as IComponentsObject;
+        const schemas = components.schemas as ISchemaObject;
+
+        if (schemas[protoEnum.fullName]) {
+            return this;
+        }
+
+        const schema = {
+            oneOf: Object.keys(protoEnum.values),
+            type: "string",
+        } as any;
+
+        if (protoEnum.comment) {
+            schema.description = protoEnum.comment;
+        }
+
+        schemas[protoEnum.fullName] = schema;
+        return this;
+    }
+
+    public setHandleRequest(http: IResolvedHttpOptions, handleRequest: HandleRequest<any, any>) {
+        this[http.method](http.path, async (ctx, next) => {
+            const requestObject = OpenApiRouter.resolveRequestObject(ctx, http.body);
+            const handleResponse = await handleRequest.handleObject(
+                requestObject,
+                this.opt.toObjectOptions || {},
+            );
+
+            ctx.status = handleResponse.statusCode;
+            ctx.response.set("Status", String(handleResponse.status));
+            ctx.response.set("Status-Message", handleResponse.statusMessage);
+            if (handleResponse.status === 0) {
+                ctx.response.body = handleResponse.response;
+            } else {
+                ctx.response.body = {
+                    error: Grpc[handleResponse.status],
+                    message: handleResponse.statusMessage,
+                };
+
+                throw (handleResponse.error || new Error(handleResponse.statusMessage));
+            }
+        });
+
+        return this;
     }
 
     public handles() {
