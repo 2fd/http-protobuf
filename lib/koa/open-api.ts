@@ -51,6 +51,14 @@ export type SupportedHttpMethod = "get" | "post" | "put" | "delete";
 
 export class OpenApiRouter extends router.Router {
 
+    public static StatusCode = {
+        delete: Http.NoContent,
+        get: Http.OK,
+        patch: Http.Accepted,
+        post: Http.Created,
+        put: Http.Accepted,
+    };
+
     public static resolveOptions(options?: { [key: string]: any }): IResolvedHttpOptions | null {
 
         if (
@@ -269,12 +277,13 @@ export class OpenApiRouter extends router.Router {
                 this.opt.toObjectOptions || {},
             );
 
-            ctx.status = handleResponse.statusCode;
             ctx.response.set("Status", String(handleResponse.status));
             ctx.response.set("Status-Message", handleResponse.statusMessage);
             if (handleResponse.status === 0) {
+                ctx.status = OpenApiRouter.StatusCode[http.method] || handleResponse.statusCode;
                 ctx.response.body = handleResponse.response;
             } else {
+                ctx.status = handleResponse.statusCode;
                 ctx.response.body = {
                     error: Grpc[handleResponse.status],
                     message: handleResponse.statusMessage,
