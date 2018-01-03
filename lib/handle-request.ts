@@ -79,25 +79,32 @@ export class HandleRequest<Req extends object, Res extends object> {
     }
 
     public async handle(request: Message<Req>): Promise<IHandleResponse<Message<Res>>> {
+        const handleData: { requestObject: any, responseObject: any } = {
+            requestObject: null,
+            responseObject: null,
+        };
         try {
             // Create and validate request
             const requestError = this.requestType.verify(request);
             if (requestError) {
                 return {
-                    error: new Error(requestError),
+                    error: new InvalidArgumentError(requestError),
                     response: null,
                     status: Grpc.InvalidArgument,
                     statusCode: Http.BadRequest,
                     statusMessage: requestError,
                 };
             }
+            const requestObject: any = request.toJSON();
+            handleData.requestObject = requestObject;
             // Create and validate response
-            const responseObject = await this.implementation(request.toJSON() as any);
+            const responseObject = await this.implementation(requestObject);
+            handleData.responseObject = responseObject;
             const response = this.responseType.fromObject(responseObject);
             const responseError = this.responseType.verify(response);
             if (responseError) {
                 return {
-                    error: new Error(responseError),
+                    error: new InternalError(responseError, handleData),
                     response: null,
                     status: Grpc.Internal,
                     statusCode: Http.InternalServerError,
@@ -115,7 +122,7 @@ export class HandleRequest<Req extends object, Res extends object> {
         } catch (error) {
             // Catch unexpected errors
             return {
-                error,
+                error: Object.assign(error, handleData),
                 response: null,
                 status: error.status || Grpc.Unknown,
                 statusCode: error.statusCode || Http.InternalServerError,
