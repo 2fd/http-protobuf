@@ -1,6 +1,6 @@
 {
   "name": "http-protobuf",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "description": "Expose your protocol buffer service as HTTP endpoint or RESTful API",
   "main": "index.js",
   "scripts": {
