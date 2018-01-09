@@ -1,3 +1,4 @@
+import * as Koa from "koa";
 import * as body from "koa-bodyparser";
 import * as KoaRouter from "koa-router";
 import {
@@ -18,11 +19,58 @@ import {UnimplementedError} from "../errors/grpc/UnimplementedError";
 import { HandleRequest } from "../handle-request";
 import * as router from "./router";
 
+export interface IBodyOptions {
+    /**
+     *  parser will only parse when request type hits enableTypes, default is ['json', 'form'].
+     */
+    enableTypes?: string[];
+    /**
+     * requested encoding. Default is utf-8 by co-body
+     */
+    encode?: string;
+
+    /**
+     * limit of the urlencoded body. If the body ends up being larger than this limit
+     * a 413 error code is returned. Default is 56kb
+     */
+    formLimit?: string;
+
+    /**
+     * limit of the json body. Default is 1mb
+     */
+    jsonLimit?: string;
+
+    /**
+     * when set to true, JSON parser will only accept arrays and objects. Default is true
+     */
+    strict?: boolean;
+
+    /**
+     * custom json request detect function. Default is null
+     */
+    detectJSON?: (ctx: Koa.Context) => boolean;
+
+    /**
+     * support extend types
+     */
+    extendTypes?: {
+        json?: string[];
+        form?: string[];
+        text?: string[];
+    }
+
+    /**
+     * support custom error handle
+     */
+    onerror?: (err: Error, ctx: Koa.Context) => void;
+}
+
 export interface IRouterOptions extends router.IRouterOptions {
     services: string[];
     implementation: Implementations;
     definitionEndpoint?: string | boolean;
     toObjectOptions?: object;
+    bodyOptions?: IBodyOptions;
     customType?: {
         [protoType: string]: any,
     };
@@ -132,7 +180,7 @@ export class OpenApiRouter extends router.Router {
             options.openapi,
         );
 
-        this.use(body());
+        this.use(body(options.bodyOptions || {}));
         this.handleRequests = [];
         options.services.forEach((serviceName) => {
             const service = this.lookupService(serviceName);
