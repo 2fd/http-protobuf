@@ -10,6 +10,7 @@ import * as router from "./router";
 
 export interface IRouterOptions extends router.IRouterOptions {
     services: string[];
+    bodyOptions?: raw.Options;
     implementation: Implementations;
 }
 
@@ -22,7 +23,7 @@ export interface IHandleRequestInfo {
 
 export class UnaryBufferRouter extends router.Router {
 
-    public static async BodyParser(ctx: KoaRouter.IRouterContext): Promise<Buffer> {
+    public static async BodyParser(ctx: KoaRouter.IRouterContext, options: raw.Options = {}): Promise<Buffer> {
         switch (ctx.request.type) {
             case "application/octet-stream":
             case "application/protobuf":
@@ -30,7 +31,7 @@ export class UnaryBufferRouter extends router.Router {
             case "application/vnd.google.protobuf":
             // case "application/grpc+proto":
             case "application/grpc-web+proto":
-                return raw(ctx.req);
+                return raw(ctx.req, options);
             default:
                 throw new UnimplementedError(`Unimplemented "Content-Type" parser for "${ctx.request.type}"`);
         }
@@ -61,7 +62,7 @@ export class UnaryBufferRouter extends router.Router {
                 // Register path
                 this.post(path, async (ctx) => {
                     ctx.response.type = "application/grpc-web+proto";
-                    const body = await UnaryBufferRouter.BodyParser(ctx);
+                    const body = await UnaryBufferRouter.BodyParser(ctx, options.bodyOptions);
                     const handleResponse = await handleRequest.handleBuffer(body);
 
                     ctx.status = handleResponse.statusCode;
